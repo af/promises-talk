@@ -6,7 +6,7 @@
     <title>Promises L&L</title>
     <style>
         body { color: #aaa; font-family: 'PT Serif'; -webkit-font-smoothing: antialiased; }
-        section { background: #000; padding: 1em 3em; }
+        section { background: #000; padding: 1em 3em; overflow: hidden; }
         a, a:visited { color: #429cb2; }
         h1,h2,h3,h4 { color: #eee; }
         h1 { font-size:2em; margin:2em 0 0.5em; }
@@ -15,15 +15,15 @@
         .indent { margin-left: 2em; }
         .subhead { font-style:italic; }
         blockquote { font-style:italic; background:#15151a; margin: 1rem 0; padding:2rem; }
-        pre > code { display: block; padding: 0.5em 1em; overflow: auto; font-size:0.8em; }
+        pre > code { display: block; padding: 0.5em 1em; overflow: auto; font-size:0.7em; line-height:1.4; }
         code { background:#15151a; padding:4px; }
-        code.runnable { cursor:pointer; position: relative; border-right: 4px solid #429cb2; }
-        code.runnable:before {
-            content:'Click to run'; color: black; background:#429cb2; padding:0 1em;
+        code.clickable { cursor:pointer; position: relative; border-right: 4px solid #429cb2; }
+        code.clickable:before {
+            content:'Double-click to run'; color: black; background:#429cb2; opacity:0.6; padding:0 1em;
             position:absolute; top:0; right:0; font-family:'PT Serif'; font-size:0.6em;
         }
-        code.finished { border-color:green; }
-        code.finished:before { content: 'Complete'; background: green; }
+        code.finished { border-color:#55ee77; }
+        code.finished:before { content: 'Complete'; background: #55ee77; }
     </style>
 </head>
 <body>
@@ -42,8 +42,34 @@
         <ul>
             <li>Complicated</li>
             <li>Magic</li>
-            <li>A solution to “callback hell”</li>
+            <li>A “flow control” solution, per se</li>
             <li class="indent">Promises get a bad rap because people assume this is their purpose</li>
+            <li class="indent">But they do ease the pain in many cases</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Why Promises now?</h2>
+        <ul>
+            <li>Part of EcmaScript 6</li>
+            <li>Already <a href="http://caniuse.com/#search=promise">natively supported</a>
+                by most browsers today
+            </li>
+            <li>Future DOM APIs will use them (they call them “futures”)</li>
+            <li>Available in Node 0.11 (and 0.12 if it ever ships)</li>
+            <li>More composable than Node-style callbacks</li>
+            <li class="indent">Create values, pass them around</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>My "expertise"</h2>
+        <ul>
+            <li>Read about, but didn't understand, Promises for years</li>
+            <li>Only really learned Promises a month or two ago</li>
+            <li class="indent"><em>"This is coming in ES6? Shit, I should probably learn it"</em></li>
+            <li>Still haven't used them in a significant project</li>
+            <li class="indent">A grain of salt is warranted</li>
         </ul>
     </section>
 
@@ -53,55 +79,53 @@
             Promises capture the notion of an eventual value into an object
         </blockquote>
         <a href="http://www.mattgreer.org/articles/promises-in-wicked-detail/"
-            style="float:right">(source)</a>
+            style="float:right"><small>(source)</small></a>
 
         <div style="margin-top:2em">
-            For example: <pre><code>var myPromise = getSomethingFromDatabase();</code></pre>
+            For example:
+            <pre><code class="norun">var myPromise = getSomethingFromDatabase();</code></pre>
         </div>
     </section>
 
     <section>
-        <h2>Example 1</h2>
+        <h2>Some helper utilities (for the slides)</h2>
+        <pre><code class="predefine">window.demo = {};
+demo.show = function(obj) { alert('Success: ' + obj) }
+demo.error = function(obj) { alert('Error: ' + obj) }
+
+// Don't worry about this yet
+demo.asyncEcho = function(spec) {
+    return new Promise(function(resolve, reject) {
+        setTimeout(function() { resolve(spec.value) }, spec.time);
+    });
+};</code></pre>
+    </section>
+
+    <section>
+        <h2>Live Example</h2>
+        <pre><code contenteditable>var p = demo.asyncEcho({ value: 'foo', time: 3000 });
+p.then(demo.show);
+</code></pre>
     </section>
 
     <section>
         <h2>A bit more detail</h2>
         Promises:
         <ul>
-            <li>Have a <code>then()</code> method, which can be chained</li>
+            <li>Have a <code>then()</code> method</li>
+            <li class="indent">which can be called multiple times (don't try this with callbacks)</li>
+            <li class="indent">which can be called before and/or after resolution (no race conditions!)</li>
+
             <li>Can represent an error instead of a value</li>
             <li class="indent">Three states: pending, fulfilled, rejected (error)</li>
             <li>Always resolve/reject exactly one time (not multiple times)</li>
             <li>Are always asynchronously resolved</li>
-            <li>have many compatible implementations (and some incompatible
-                ones, like jQuery's :( )</li>
         </ul>
     </section>
 
     <section>
-        <h2>Why Promises now?</h2>
-        <ul>
-            <li>Part of ES6,
-                <a href="http://caniuse.com/#search=promise">natively supported</a>
-                by most browsers today</li>
-            <li>Available in Node 0.11 (and 0.12 if it ever ships)</li>
-            <li>More composable than Node-style callbacks</li>
-            <li>
-                Pretty <a href="http://pag.forbeslindesay.co.uk/">awesome</a>
-                with ES6 generators:
-
-<pre><code>var login = async(function* (username, password, session) {
-    var user = yield getUser(username);
-    var hash = yield crypto.hashAsync(password + user.salt);
-    if (user.hash !== hash) throw new Error('Incorrect password');
-    session.setUser(user);
-});</code></pre>
-            </li>
-    </section>
-
-    <section>
         <h2>Creating an API that returns a Promise</h2>
-        <pre><code>demo.asyncSquare = function(x) {
+        <pre><code class="predefine">demo.asyncSquare = function(x) {
   return new Promise(function(resolve, reject) {
     setTimeout(function() {
       if (x > 5) resolve(x*x);
@@ -110,26 +134,67 @@
   });
 }</code></pre>
 
-        <pre><code>demo.squareProm = demo.asyncSquare(10);    // we can pass p around</code></pre>
+        <pre><code contenteditable>demo.squareProm = demo.asyncSquare(10);    // we can pass p around</code></pre>
     </section>
 
     <section>
         <h2>...continued</h2>
-        <pre><code>// Or we could call then() right away:
+        <pre><code contenteditable>// Or we could call then() right away (with bonus error handling!):
 var num = prompt('Enter a number');
-var show = function(obj) { alert('Success: ' + obj) }
-var error = function(obj) { alert('Error: ' + obj) }
-demo.asyncSquare(num).then(show)
-                     .catch(error);</code></pre>
+demo.asyncSquare(num).then(demo.show)
+                     .catch(demo.error);</code></pre>
     </section>
 
     <section>
-        <h2>Full API</h2>
+        <h2>More of the API</h2>
+        Note! All of these functions return a new Promise:
+        <ul>
+            <li><code>Promise.all(p1, p2, p3)</code> resolves if all args resolve</li>
+            <li><code>Promise.race(p1, p2, p3)</code> resolves to 1st resolved value</li>
+            <li><code>Promise.resolve(value)</code> returns a resolved Promise</li>
+            <li><code>Promise.reject(error)</code> returns a rejected Promise</li>
+            <li>Many, many more utilities in other Promise libs (eg. Q, bluebird)</li>
+        </ul>
     </section>
 
     <section>
-        <h2>Why they don't really address callback hell</h2>
-        better than nested callbacks
+        <h2>Chaining in action</h2>
+        <pre><code contenteditable>// Make your promise return a promise
+demo.asyncEcho({ value: 'first thing', time: 1000 })
+    .then(function(val) {
+        demo.show(val)
+        return demo.asyncEcho({ value: 'second thing', time: 3000 })
+    }).then(function(val) {
+        demo.show(val)
+    }).catch(function(err) {
+        // Errors propagate automatically (no "if (err) throw err"!)
+        demo.error(err);
+    });
+</code></pre>
+    </section>
+
+    <section>
+        <h2>Promises don't address all flow control problems</h2>
+        <ul>
+            <li>IMO, much of the problems with Step, async.js, etc still exist.</li>
+            <li class="indent">Long chains of functions</li>
+
+            <li class="indent">Incidental complexity and extra code (vs synchronous)</li>
+            <li>This will (hopefully) be solved by...</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>ES6 Generators</h2>
+        Promises can be pretty <a href="http://pag.forbeslindesay.co.uk/">awesome</a>
+        with ES6 generators:
+
+<pre><code class="norun">var login = async(function* (username, password, session) {
+    var user = yield getUser(username);
+    var hash = yield crypto.hashAsync(password + user.salt);
+    if (user.hash !== hash) throw new Error('Incorrect password');
+    session.setUser(user);
+});</code></pre>
     </section>
 
     <section>
@@ -156,6 +221,10 @@ demo.asyncSquare(num).then(show)
                 </a>
             </li>
             <li>
+                Pros/cons of <a href="http://www.2ality.com/2014/09/es6-promises-foundations.html">callbacks</a>
+                and <a href="http://www.2ality.com/2014/10/es6-promises-api.html">Promises</a>
+            </li>
+            <li>
                 <a href="https://github.com/petkaantonov/bluebird">Bluebird (fast, full-featured Promise implementation)</a>
             </li>
         </ul>
@@ -167,18 +236,28 @@ demo.asyncSquare(num).then(show)
     <script>
         var mystack = stack()
 
-        var demo = {};
         var $ = function(query) {
             return [].slice.call(document.querySelectorAll(query));
         };
+
+        // Get all code blocks in the presentation and either eval their code,
+        // or make the code runnable when the code is clicked:
         $('pre > code').forEach(function(el) {
             (function(codeTag) {
-                codeTag.classList.add('runnable');
-                codeTag.addEventListener('click', function(evt) {
+                if (codeTag.classList.contains('norun')) {
+                    // Do nothing
+                } else if (codeTag.classList.contains('predefine')) {
                     var code = codeTag.innerText;
                     eval(code);
-                    codeTag.classList.add('finished');
-                })
+                } else {
+                    codeTag.classList.add('clickable');
+                    codeTag.addEventListener('dblclick', function(evt) {
+                        var code = codeTag.innerText;
+                        eval(code);
+                        codeTag.classList.add('finished');
+                        setTimeout(function() { codeTag.classList.remove('finished'); }, 7000);
+                    })
+                }
             }(el))
         });
     </script>
