@@ -9,14 +9,21 @@
         section { background: #000; padding: 1em 3em; }
         a, a:visited { color: #429cb2; }
         h1,h2,h3,h4 { color: #eee; }
-        h1 { font-size:5rem; margin: 5rem 0 1rem; }
-        h2 { font-size:2.8rem; }
+        h1 { font-size:2em; margin:2em 0 0.5em; }
+        h2 { font-size:1.3em; }
         ul > li { margin-bottom:0.4em; }
         .indent { margin-left: 2em; }
         .subhead { font-style:italic; }
         blockquote { font-style:italic; background:#15151a; margin: 1rem 0; padding:2rem; }
         pre > code { display: block; padding: 0.5em 1em; overflow: auto; font-size:0.8em; }
         code { background:#15151a; padding:4px; }
+        code.runnable { cursor:pointer; position: relative; border-right: 4px solid #429cb2; }
+        code.runnable:before {
+            content:'Click to run'; color: black; background:#429cb2; padding:0 1em;
+            position:absolute; top:0; right:0; font-family:'PT Serif'; font-size:0.6em;
+        }
+        code.finished { border-color:green; }
+        code.finished:before { content: 'Complete'; background: green; }
     </style>
 </head>
 <body>
@@ -94,25 +101,26 @@
 
     <section>
         <h2>Creating an API that returns a Promise</h2>
-        <pre><code>function asyncSquare(x) {
-  return new Promise(function(res, rej) {
+        <pre><code>demo.asyncSquare = function(x) {
+  return new Promise(function(resolve, reject) {
     setTimeout(function() {
-      if (x > 5) res(x*x);
-      else rej(new Error('x is too small'))
-    }, 1000)
+      if (x > 5) resolve(x*x);
+      else reject(new Error('x is too small'))
+    }, 5000)
   });
 }</code></pre>
 
-        <pre><code>var squareProm = asyncSquare(10);    // Now we can pass p around</code></pre>
+        <pre><code>demo.squareProm = demo.asyncSquare(10);    // we can pass p around</code></pre>
+    </section>
 
     <section>
         <h2>...continued</h2>
         <pre><code>// Or we could call then() right away:
 var num = prompt('Enter a number');
-var log = console.log.bind(console);
-var error = console.error.bind(console);
-asyncSquare(num).then(log)
-                .catch(error);</code></pre>
+var show = function(obj) { alert('Success: ' + obj) }
+var error = function(obj) { alert('Error: ' + obj) }
+demo.asyncSquare(num).then(show)
+                     .catch(error);</code></pre>
     </section>
 
     <section>
@@ -158,6 +166,21 @@ asyncSquare(num).then(log)
     <script src="stack.v1.js"></script>
     <script>
         var mystack = stack()
+
+        var demo = {};
+        var $ = function(query) {
+            return [].slice.call(document.querySelectorAll(query));
+        };
+        $('pre > code').forEach(function(el) {
+            (function(codeTag) {
+                codeTag.classList.add('runnable');
+                codeTag.addEventListener('click', function(evt) {
+                    var code = codeTag.innerText;
+                    eval(code);
+                    codeTag.classList.add('finished');
+                })
+            }(el))
+        });
     </script>
 </body>
 </html>
