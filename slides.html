@@ -3,18 +3,154 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width">
-    <title>Title</title>
+    <title>Promises L&L</title>
     <style>
-        body { color: #eee; font-family: 'PT Serif'; -webkit-font-smoothing: antialiased; }
-        section { background: #000; padding: 10rem; font-size: 2rem; }
+        body { color: #aaa; font-family: 'PT Serif'; -webkit-font-smoothing: antialiased; }
+        section { background: #000; padding: 1em 3em; }
+        a, a:visited { color: #429cb2; }
+        h1,h2,h3,h4 { color: #eee; }
+        h1 { font-size:5rem; margin: 5rem 0 1rem; }
+        h2 { font-size:2.8rem; }
+        ul > li { margin-bottom:0.4em; }
+        .indent { margin-left: 2em; }
+        .subhead { font-style:italic; }
+        blockquote { font-style:italic; background:#15151a; margin: 1rem 0; padding:2rem; }
+        pre > code { display: block; padding: 0.5em 1em; overflow: auto; font-size:0.8em; }
+        code { background:#15151a; padding:4px; }
     </style>
 </head>
 <body>
     <section>
-        <h1>Title</h1>
+        <h1>Promises</h1>
+        <p class="subhead">Reelhouse lunch &amp; learn</p>
     </section>
+
     <section>
-        slide 2
+        <h2>Did you just throw up in your mouth a little bit?</h2>
+        <img src="images/grosscode.png">
+    </section>
+
+    <section>
+        <h2>What Promises are not</h2>
+        <ul>
+            <li>Complicated</li>
+            <li>Magic</li>
+            <li>A solution to “callback hell”</li>
+            <li class="indent">Promises get a bad rap because people assume this is their purpose</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>The simplest definition</h2>
+        <blockquote>
+            Promises capture the notion of an eventual value into an object
+        </blockquote>
+        <a href="http://www.mattgreer.org/articles/promises-in-wicked-detail/"
+            style="float:right">(source)</a>
+
+        <div style="margin-top:2em">
+            For example: <pre><code>var myPromise = getSomethingFromDatabase();</code></pre>
+        </div>
+    </section>
+
+    <section>
+        <h2>Example 1</h2>
+    </section>
+
+    <section>
+        <h2>A bit more detail</h2>
+        Promises:
+        <ul>
+            <li>Have a <code>then()</code> method, which can be chained</li>
+            <li>Can represent an error instead of a value</li>
+            <li class="indent">Three states: pending, fulfilled, rejected (error)</li>
+            <li>Always resolve/reject exactly one time (not multiple times)</li>
+            <li>Are always asynchronously resolved</li>
+            <li>have many compatible implementations (and some incompatible
+                ones, like jQuery's :( )</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Why Promises now?</h2>
+        <ul>
+            <li>Part of ES6,
+                <a href="http://caniuse.com/#search=promise">natively supported</a>
+                by most browsers today</li>
+            <li>Available in Node 0.11 (and 0.12 if it ever ships)</li>
+            <li>More composable than Node-style callbacks</li>
+            <li>
+                Pretty <a href="http://pag.forbeslindesay.co.uk/">awesome</a>
+                with ES6 generators:
+
+<pre><code>var login = async(function* (username, password, session) {
+    var user = yield getUser(username);
+    var hash = yield crypto.hashAsync(password + user.salt);
+    if (user.hash !== hash) throw new Error('Incorrect password');
+    session.setUser(user);
+});</code></pre>
+            </li>
+    </section>
+
+    <section>
+        <h2>Creating an API that returns a Promise</h2>
+        <pre><code>function asyncSquare(x) {
+  return new Promise(function(res, rej) {
+    setTimeout(function() {
+      if (x > 5) res(x*x);
+      else rej(new Error('x is too small'))
+    }, 1000)
+  });
+}</code></pre>
+
+        <pre><code>var squareProm = asyncSquare(10);    // Now we can pass p around</code></pre>
+
+    <section>
+        <h2>...continued</h2>
+        <pre><code>// Or we could call then() right away:
+var num = prompt('Enter a number');
+var log = console.log.bind(console);
+var error = console.error.bind(console);
+asyncSquare(num).then(log)
+                .catch(error);</code></pre>
+    </section>
+
+    <section>
+        <h2>Full API</h2>
+    </section>
+
+    <section>
+        <h2>Why they don't really address callback hell</h2>
+        better than nested callbacks
+    </section>
+
+    <section>
+        <h2>References &amp; recommended reading</h2>
+        <ul>
+            <li>
+                <a href="http://www.mattgreer.org/articles/promises-in-wicked-detail/">
+                    Promises in wicked detail
+                </a>
+            </li>
+            <li>
+                <a href="https://blog.domenic.me/youre-missing-the-point-of-promises/">
+                    You're missing the point of Promises
+                </a>
+            </li>
+            <li>
+                <a href="https://github.com/kriskowal/q/blob/v1/design/README.js">
+                    Q.js (a promise library) design document
+                </a>
+            </li>
+            <li>
+                <a href="http://www.kendoui.com/blogs/teamblog/posts/13-03-28/what-is-the-point-of-promises.aspx">
+                    What is the point of Promises
+                </a>
+            </li>
+            <li>
+                <a href="https://github.com/petkaantonov/bluebird">Bluebird (fast, full-featured Promise implementation)</a>
+            </li>
+        </ul>
     </section>
 
     <!-- Using https://github.com/mbostock/stack/ -->
